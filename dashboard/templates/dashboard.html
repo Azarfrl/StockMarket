@@ -1,57 +1,167 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Stock Market</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Simulator</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.5.0/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.1/dist/chartjs-chart-financial.min.js"></script>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            background: #111;
-            color: white;
+            padding: 25px;
+            background: #11151b;
+            color: #d8dee8;
             font-family: Arial, sans-serif;
         }
 
         .container {
-            width: 90%;
-            margin: 30px auto;
+            max-width: 1150px;
+            margin: auto;
         }
 
-        #price {
-            font-size: 35px;
-            font-weight: bold;
-            margin-bottom: 15px;
+        h1 {
+            font-size: 26px;
+            font-weight: 600;
+            color: #e5e9f0;
+            margin-bottom: 25px;
         }
 
-        .info {
+        h2 {
             font-size: 18px;
-            margin-bottom: 15px;
-            line-height: 1.6;
+            font-weight: 600;
+            color: #e0e5ed;
+        }
+
+        .panel {
+            background: #191f28;
+            border: 1px solid #303946;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 18px;
         }
 
         input {
-            padding: 10px;
-            width: 100px;
-            font-size: 16px;
+            padding: 10px 12px;
+            border: 1px solid #3b4655;
+            border-radius: 3px;
+            background: #111720;
+            color: #e0e5ed;
+            font-size: 14px;
+            width: 190px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #648c83;
         }
 
         button {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
+            padding: 10px 15px;
+            border: 1px solid #465363;
+            border-radius: 3px;
+            background: #293441;
+            color: #dce3eb;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 13px;
+            margin: 3px;
         }
 
         button:hover {
-            opacity: 0.8;
+            background: #354354;
+        }
+
+        button.active {
+            background: #345b50;
+            border-color: #527c6e;
+            color: #e5f1eb;
+        }
+
+        .stock-search {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .stock-buttons {
+            margin-top: 12px;
+        }
+
+        .stock-buttons button {
+            background: #222c37;
+            border-color: #394654;
+        }
+
+        .stock-buttons button:hover {
+            background: #344352;
         }
 
         .chart-container {
             position: relative;
-            height: 500px;
-            margin-top: 20px;
+            height: 400px;
+            width: 100%;
+        }
+
+        .portfolio {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .portfolio-item {
+            background: #151b23;
+            border: 1px solid #303946;
+            padding: 16px;
+            border-radius: 4px;
+        }
+
+        .portfolio-item p {
+            color: #929eae;
+            font-size: 13px;
+            margin: 0 0 12px;
+        }
+
+        .portfolio-item h2 {
+            font-size: 22px;
+            margin: 0;
+            color: #e2e8f0;
+        }
+
+        .trade {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 7px;
+        }
+
+        #status {
+            color: #c6a76b;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+
+            .panel {
+                padding: 14px;
+            }
         }
     </style>
 </head>
@@ -60,194 +170,403 @@
 
 <div class="container">
 
-    <h1>Stock Market</h1>
+    <h1>Stock Market Simulator</h1>
 
-    <div id="price">$100.00</div>
+    <div class="panel">
+        <h2>Choose a Stock</h2>
 
-    <div class="info">
-        Cash: $<span id="cash">1000.00</span><br>
-        Shares: <span id="shares">0</span><br>
-        Portfolio: $<span id="value">1000.00</span>
+        <div class="stock-search">
+            <input
+                type="text"
+                id="stockSymbol"
+                value="AAPL"
+                placeholder="Enter ticker symbol"
+                maxlength="10"
+            >
+
+            <button onclick="changeStock()">
+                Search Stock
+            </button>
+        </div>
+
+        <div class="stock-buttons">
+            <button onclick="selectStock('AAPL')">AAPL</button>
+            <button onclick="selectStock('MSFT')">MSFT</button>
+            <button onclick="selectStock('TSLA')">TSLA</button>
+            <button onclick="selectStock('NVDA')">NVDA</button>
+            <button onclick="selectStock('AMZN')">AMZN</button>
+        </div>
+
+        <p id="status"></p>
     </div>
 
-    <input type="number" id="amount" min="1" placeholder="Shares">
+    <div class="panel">
+        <h2 id="stockTitle">AAPL Stock Price</h2>
 
-    <button onclick="buyStock()">BUY</button>
-    <button onclick="sellStock()">SELL</button>
+        <div>
+            <button id="lineTab" class="active" onclick="showLine()">
+                Line
+            </button>
 
-    <br>
+            <button id="barTab" onclick="showBar()">
+                Bar
+            </button>
 
-    <button onclick="showLine()">📈 Line</button>
-    <button onclick="showBar()">📊 Bar</button>
+            <button id="candleTab" onclick="showCandlestick()">
+                Candlestick
+            </button>
+        </div>
 
-    <div class="chart-container">
-        <canvas id="stockChart"></canvas>
+        <div class="chart-container">
+            <canvas id="stockChart"></canvas>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Portfolio</h2>
+
+        <div class="portfolio">
+
+            <div class="portfolio-item">
+                <p>Latest Stock Price</p>
+                <h2 id="price">$0.00</h2>
+            </div>
+
+            <div class="portfolio-item">
+                <p>Available Cash</p>
+                <h2 id="cash">$1000.00</h2>
+            </div>
+
+            <div class="portfolio-item">
+                <p id="sharesLabel">AAPL Shares</p>
+                <h2 id="shares">0</h2>
+            </div>
+
+            <div class="portfolio-item">
+                <p>Total Portfolio Value</p>
+                <h2 id="value">$1000.00</h2>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Buy and Sell Shares</h2>
+
+        <div class="trade">
+            <input
+                type="number"
+                id="amount"
+                min="1"
+                step="1"
+                value="1"
+                placeholder="Number of shares"
+            >
+
+            <button onclick="tradeStock('buy')">Buy</button>
+            <button onclick="tradeStock('sell')">Sell</button>
+        </div>
     </div>
 
 </div>
 
 <script>
+
+    let currentSymbol = "AAPL";
+    let chartType = "line";
+
     let labels = [];
     let prices = [];
-    let chartType = "line";
-    let stockChart;
+    let candles = [];
 
-    const ctx = document.getElementById("stockChart");
+    let stockChart = null;
+
+
+    async function changeStock() {
+        const symbol = document
+            .getElementById("stockSymbol")
+            .value.trim()
+            .toUpperCase();
+
+        if (!symbol) {
+            document.getElementById("status").textContent =
+                "Enter a stock ticker.";
+            return;
+        }
+
+        await updateStock(symbol);
+    }
+
+
+    async function selectStock(symbol) {
+        document.getElementById("stockSymbol").value = symbol;
+        await updateStock(symbol);
+    }
+
+
+    function setActiveTab(tabId) {
+        document.getElementById("lineTab").classList.remove("active");
+        document.getElementById("barTab").classList.remove("active");
+        document.getElementById("candleTab").classList.remove("active");
+
+        document.getElementById(tabId).classList.add("active");
+    }
+
+
+    function showLine() {
+        chartType = "line";
+        setActiveTab("lineTab");
+        createChart();
+    }
+
+
+    function showBar() {
+        chartType = "bar";
+        setActiveTab("barTab");
+        createChart();
+    }
+
+
+    function showCandlestick() {
+        chartType = "candlestick";
+        setActiveTab("candleTab");
+        createChart();
+    }
+
 
     function createChart() {
+        const ctx = document.getElementById("stockChart");
+
         if (stockChart) {
             stockChart.destroy();
         }
 
-        stockChart = new Chart(ctx, {
-            type: chartType,
+        if (chartType === "candlestick") {
 
-            data: {
-                labels: labels,
+            const candleData = candles.map(candle => ({
+                x: new Date(candle.date + "T00:00:00").getTime(),
+                o: candle.open,
+                h: candle.high,
+                l: candle.low,
+                c: candle.close
+            }));
 
-                datasets: [{
-                    label: "Stock Price",
-                    data: prices,
-                    borderWidth: 2,
-                    tension: 0.3,
-                    pointRadius: 0
-                }]
-            },
+            stockChart = new Chart(ctx, {
+                type: "candlestick",
 
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
+                data: {
+                    datasets: [{
+                        label: currentSymbol + " Stock Price",
+                        data: candleData,
 
-                interaction: {
-                    intersect: false,
-                    mode: "index"
+                        color: {
+                            up: "#61977b",
+                            down: "#bd6666",
+                            unchanged: "#999999"
+                        }
+                    }]
                 },
 
-                scales: {
-                    x: {
-                        ticks: {
-                            color: "white"
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    parsing: false,
+                    animation: false,
+
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: "#d8dee8"
+                            },
+                            onClick: () => {}
                         }
                     },
 
-                    y: {
-                        ticks: {
-                            color: "white"
-                        }
-                    }
-                },
+                    scales: {
+                        x: {
+                            type: "time",
 
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: "white"
-                        }
-                    },
+                            time: {
+                                unit: "day"
+                            },
 
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return "$" + context.parsed.y.toFixed(2);
+                            ticks: {
+                                color: "#929eae"
+                            },
+
+                            grid: {
+                                color: "#303946"
+                            }
+                        },
+
+                        y: {
+                            ticks: {
+                                color: "#929eae",
+
+                                callback: value => "$" + value
+                            },
+
+                            grid: {
+                                color: "#303946"
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+
+        } else {
+
+            stockChart = new Chart(ctx, {
+                type: chartType,
+
+                data: {
+                    labels: labels,
+
+                    datasets: [{
+                        label: currentSymbol + " Closing Price",
+                        data: prices,
+                        borderColor: "#739b8b",
+                        backgroundColor: chartType === "bar"
+                            ? "#739b8b"
+                            : "rgba(115, 155, 139, 0.15)",
+                        borderWidth: 2,
+                        fill: chartType === "line",
+                        tension: 0.3
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: "#d8dee8"
+                            },
+                            onClick: () => {}
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: "#929eae",
+                                maxTicksLimit: 10
+                            },
+                            grid: {
+                                color: "#303946"
+                            }
+                        },
+
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: "#929eae",
+
+                                callback: value => "$" + value
+                            },
+                            grid: {
+                                color: "#303946"
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 
-    function showLine() {
-        chartType = "line";
-        createChart();
-    }
 
-    function showBar() {
-        chartType = "bar";
-        createChart();
-    }
+    async function updateStock(symbol = currentSymbol) {
+        const status = document.getElementById("status");
+        status.textContent = "Loading stock data...";
 
-    async function updateStock() {
         try {
-            const response = await fetch("/stock-price/");
+            const response = await fetch(
+                `/stock-price/?symbol=${encodeURIComponent(symbol)}`
+            );
+
             const data = await response.json();
 
-            const now = new Date();
-
-            const time =
-                now.getHours().toString().padStart(2, "0") +
-                ":" +
-                now.getMinutes().toString().padStart(2, "0") +
-                ":" +
-                now.getSeconds().toString().padStart(2, "0");
-
-            labels.push(time);
-            prices.push(data.price);
-
-            if (labels.length > 60) {
-                labels.shift();
-                prices.shift();
+            if (!response.ok) {
+                throw new Error(
+                    data.error || "Unable to retrieve stock data."
+                );
             }
 
+            currentSymbol = symbol;
+            labels = data.labels;
+            prices = data.prices;
+            candles = data.candles;
+
+            document.getElementById("stockSymbol").value = symbol;
+
+            document.getElementById("stockTitle").textContent =
+                symbol + " Stock Price";
+
             document.getElementById("price").textContent =
-                "$" + data.price.toFixed(2);
+                "$" + Number(data.price).toFixed(2);
 
             document.getElementById("cash").textContent =
-                data.cash.toFixed(2);
+                "$" + Number(data.cash).toFixed(2);
 
             document.getElementById("shares").textContent =
                 data.shares;
 
+            document.getElementById("sharesLabel").textContent =
+                symbol + " Shares";
+
             document.getElementById("value").textContent =
-                data.value.toFixed(2);
+                "$" + Number(data.value).toFixed(2);
 
-            stockChart.data.labels = labels;
-            stockChart.data.datasets[0].data = prices;
-
-            stockChart.update();
+            status.textContent = "";
+            createChart();
 
         } catch (error) {
-            console.log("Error:", error);
+            status.textContent = error.message;
         }
     }
 
-    async function buyStock() {
+
+    async function tradeStock(action) {
         const amount = document.getElementById("amount").value;
 
-        if (amount <= 0) {
+        if (!Number.isInteger(Number(amount)) || Number(amount) <= 0) {
+            document.getElementById("status").textContent =
+                "Enter a positive whole number of shares.";
             return;
         }
 
-        const response = await fetch("/buy/?amount=" + amount);
-        const data = await response.json();
+        try {
+            const response = await fetch(
+                `/${action}/?amount=${encodeURIComponent(amount)}&symbol=${encodeURIComponent(currentSymbol)}`
+            );
 
-        document.getElementById("cash").textContent =
-            data.cash.toFixed(2);
+            const data = await response.json();
 
-        document.getElementById("shares").textContent =
-            data.shares;
-    }
+            if (!response.ok) {
+                throw new Error(data.error || "Trade unsuccessful.");
+            }
 
-    async function sellStock() {
-        const amount = document.getElementById("amount").value;
+            await updateStock(currentSymbol);
 
-        if (amount <= 0) {
-            return;
+        } catch (error) {
+            document.getElementById("status").textContent =
+                error.message;
         }
-
-        const response = await fetch("/sell/?amount=" + amount);
-        const data = await response.json();
-
-        document.getElementById("cash").textContent =
-            data.cash.toFixed(2);
-
-        document.getElementById("shares").textContent =
-            data.shares;
     }
 
-    createChart();
+    document.getElementById("stockSymbol").addEventListener(
+        "keydown",
+        event => {
+            if (event.key === "Enter") {
+                changeStock();
+            }
+        }
+    );
+
     updateStock();
-    setInterval(updateStock, 1000);
+
 </script>
 
 </body>
